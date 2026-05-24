@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Калькулятор алюминиевых фасадов</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --ink: #1f2933;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #1f6feb;
+    --accent-soft: #e8f0fe;
+    --ok: #16a34a;
+    --danger: #dc2626;
+    --shadow: 0 1px 2px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.06);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  header {
+    background: linear-gradient(135deg, #0b1220, #1f6feb);
+    color: #fff;
+    padding: 20px 28px;
+    box-shadow: var(--shadow);
+  }
+  header h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .2px;}
+  header .sub { color: #cfd8e3; font-size: 12px; margin-top: 4px; }
+
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 20px;
+    padding: 20px 28px;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1000px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card h2 .hint { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+  .field label { font-size: 12px; color: var(--muted); }
+  input, select {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    background: #fff;
+    color: var(--ink);
+    transition: border .12s, box-shadow .12s;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(31,111,235,.15);
+  }
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font: inherit;
+    cursor: pointer;
+    transition: transform .04s, background .12s;
+  }
+  button:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #1858c2; }
+  .btn-ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn-ghost:hover { background: var(--accent-soft); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid #fecaca; padding: 4px 8px; font-size: 12px;}
+  .btn-danger:hover { background: #fef2f2; }
+
+  .facade {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #fafbfc;
+    position: relative;
+  }
+  .facade-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .facade-title { font-weight: 600; font-size: 13px; color: var(--ink); }
+  .facade-meta { font-size: 12px; color: var(--muted); }
+
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .summary-line:last-child { border-bottom: none; }
+  .summary-line .label { color: var(--muted); }
+  .summary-line .val { font-variant-numeric: tabular-nums; }
+
+  .group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--muted);
+    margin: 10px 0 4px;
+  }
+
+  .total-box {
+    margin-top: 10px;
+    padding: 14px;
+    background: linear-gradient(135deg, #0b1220, #1f6feb);
+    color: #fff;
+    border-radius: 10px;
+    text-align: right;
+  }
+  .total-box .label { font-size: 12px; color: #cfd8e3; }
+  .total-box .val { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 24px;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+  }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+  .swatch {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    border: 1px solid rgba(0,0,0,.1);
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  @media print {
+    header { background: none; color: var(--ink); border-bottom: 2px solid var(--ink); }
+    main { display: block; padding: 0 12px; }
+    .card { box-shadow: none; border: 1px solid var(--line); margin-bottom: 12px; break-inside: avoid; }
+    .no-print { display: none !important; }
+    .total-box { background: none; color: var(--ink); border: 2px solid var(--ink); }
+    .total-box .label { color: var(--muted); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Калькулятор алюминиевых мебельных фасадов</h1>
+  <div class="sub">Расчёт стоимости заказа: профиль, стекло, фурнитура и услуги</div>
+</header>
+
+<main>
+  <div>
+    <!-- Клиент -->
+    <section class="card">
+      <h2>Клиент <span class="hint">контактные данные</span></h2>
+      <div class="row">
+        <div class="field">
+          <label>Имя клиента</label>
+          <input id="clientName" placeholder="Иван Иванов">
+        </div>
+        <div class="field">
+          <label>Телефон</label>
+          <input id="clientPhone" placeholder="+7 (___) ___-__-__">
+        </div>
+        <div class="field">
+          <label>Дата</label>
+          <input id="orderDate" type="date">
+        </div>
+      </div>
+    </section>
+
+    <!-- Фасады -->
+    <section class="card">
+      <h2>
+        Фасады
+        <span class="hint">размеры в миллиметрах</span>
+      </h2>
+      <div id="facadeList"></div>
+      <div class="actions no-print">
+        <button id="addFacade" class="btn-primary">+ Добавить фасад</button>
+        <button id="resetAll" class="btn-ghost">Очистить всё</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Расчёт -->
+  <aside>
+    <section class="card">
+      <h2>Итог по заказу</h2>
+      <div id="grandBreakdown"></div>
+      <div class="total-box">
+        <div class="label">Итого к оплате</div>
+        <div class="val" id="grandTotal">0 ₸</div>
+      </div>
+      <div class="actions no-print">
+        <button id="printBtn" class="btn-primary">Распечатать / PDF</button>
+      </div>
+    </section>
+
+    <section class="card no-print">
+      <h2>Прайс <span class="hint">справочно</span></h2>
+      <div class="summary-line"><span class="label">Узкий профиль, 1 м</span><span class="val">1 900 ₸</span></div>
+      <div class="summary-line"><span class="label">Широкий профиль, 1 м</span><span class="val">2 250 ₸</span></div>
+      <div class="summary-line"><span class="label">Уголок узкий</span><span class="val">450 ₸</span></div>
+      <div class="summary-line"><span class="label">Уголок широкий</span><span class="val">550 ₸</span></div>
+      <div class="summary-line"><span class="label">Петля</span><span class="val">650 ₸</span></div>
+      <div class="summary-line"><span class="label">Винт</span><span class="val">10 ₸</span></div>
+      <div class="summary-line"><span class="label">Уплотнитель, 1 м</span><span class="val">220 ₸</span></div>
+      <div class="group-title">Стекло, 1 м²</div>
+      <div class="summary-line"><span class="label">Прозрачное</span><span class="val">7 000 ₸</span></div>
+      <div class="summary-line"><span class="label">Евро серый</span><span class="val">13 000 ₸</span></div>
+      <div class="summary-line"><span class="label">Евро бронза</span><span class="val">13 000 ₸</span></div>
+      <div class="summary-line"><span class="label">Комфорт серый</span><span class="val">18 000 ₸</span></div>
+      <div class="summary-line"><span class="label">Комфорт бронза</span><span class="val">18 000 ₸</span></div>
+      <div class="summary-line"><span class="label">Рифлёное</span><span class="val">34 000 ₸</span></div>
+      <div class="group-title">Услуги</div>
+      <div class="summary-line"><span class="label">Распил 45° (за фасад)</span><span class="val">1 500 ₸</span></div>
+      <div class="summary-line"><span class="label">Отверстие под петлю</span><span class="val">1 000 ₸</span></div>
+      <div class="summary-line"><span class="label">Сборочное отверстие</span><span class="val">100 ₸</span></div>
+      <div class="summary-line"><span class="label">Сборка фасада</span><span class="val">5 000 ₸</span></div>
+    </section>
+  </aside>
+</main>
+
+<script>
+'use strict';
+
+const PRICES = {
+  profile: { narrow: 1900, wide: 2250 },    // за пог. метр
+  corner:  { narrow: 450,  wide: 550 },     // за штуку, 4 на фасад
+  hinge: 650,
+  screw: 10,
+  seal: 220,                                // за пог. метр
+  cut45: 1500,                              // за фасад
+  hingeHole: 1000,                          // за петлю
+  assemblyHole: 100,                        // за винт
+  assembly: 5000,                           // сборка фасада, за фасад
+  glass: {                                  // за м²
+    clear: 7000,
+    euro_grey: 13000,
+    euro_bronze: 13000,
+    comfort_grey: 18000,
+    comfort_bronze: 18000,
+    rifle: 34000
+  }
+};
+
+const PROFILE_COLORS = [
+  { id: 'gold',    name: 'Золото браш',    hex: '#c8a24c' },
+  { id: 'brass',   name: 'Латунь браш',    hex: '#b08d57' },
+  { id: 'black',   name: 'Чёрный матовый', hex: '#1a1a1a' },
+  { id: 'graphite',name: 'Графит',         hex: '#3d4147' }
+];
+
+const GLASS_COLORS = [
+  { id: 'euro_grey',     name: 'Евро серый',     hex: '#b8c0c4' },
+  { id: 'euro_bronze',   name: 'Евро бронза',    hex: '#a08858' },
+  { id: 'comfort_grey',  name: 'Комфорт серый',  hex: '#c2cbcf' },
+  { id: 'comfort_bronze',name: 'Комфорт бронза', hex: '#b59b6f' },
+  { id: 'clear',         name: 'Прозрачное',     hex: '#e6f0f3' },
+  { id: 'rifle',         name: 'Рифлёное',       hex: '#d8e2e5' }
+];
+
+const PROFILE_TYPES = [
+  { id: 'narrow', name: 'Узкий' },
+  { id: 'wide',   name: 'Широкий' }
+];
+
+// ---------- состояние ----------
+let facades = [];
+let nextId = 1;
+
+function newFacade() {
+  return {
+    id: nextId++,
+    width: '',
+    height: '',
+    profileType: 'narrow',
+    profileColor: 'gold',
+    glassColor: 'euro_grey',
+    qty: ''
+  };
+}
+
+// ---------- утилиты ----------
+const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ') + ' ₸';
+const fmtNum = n => (Math.round(n * 100) / 100).toLocaleString('ru-RU');
+
+function hingesFor(heightMm) {
+  const h = heightMm / 1000;
+  if (h <= 1.0) return 2;
+  if (h <= 1.2) return 3;
+  if (h <= 1.8) return 4;
+  if (h <= 2.5) return 5;
+  return 6;
+}
+
+// расчёт одного фасада
+function calcFacade(f) {
+  const w = Math.max(0, +f.width || 0) / 1000;   // м
+  const h = Math.max(0, +f.height || 0) / 1000;  // м
+  const qty = Math.max(1, +f.qty || 1);
+
+  const perimeter = 2 * (w + h);          // пог. м профиля на 1 фасад
+  const area = w * h;                      // м² стекла на 1 фасад
+  const isWide = f.profileType === 'wide';
+  const hingeHoles = hingesFor(f.height);  // отверстия делаем по правилу высоты в обоих случаях
+  const hinges = isWide ? 0 : hingeHoles;  // на широком профиле петли не ставим
+  const screws = 8 + 2 * hinges;           // 8 на углы + 2 на каждую петлю
+  const corners = 4;
+  const sealMeters = perimeter;            // уплотнитель параллельно профилю
+  const assemblyHoles = screws;
+
+  const profilePrice = PRICES.profile[f.profileType];
+  const cornerPrice  = PRICES.corner[f.profileType];
+  const glassPrice   = PRICES.glass[f.glassColor];
+  const glassName    = (GLASS_COLORS.find(c => c.id === f.glassColor) || {}).name || 'Стекло';
+
+  const items = [
+    { key: 'profile',  label: `Профиль (${isWide?'широкий':'узкий'})`,  qty: perimeter, unit: 'м',  price: profilePrice, cost: perimeter * profilePrice },
+    { key: 'glass',    label: `Стекло (${glassName})`, qty: area,  unit: 'м²', price: glassPrice, cost: area * glassPrice },
+    { key: 'corner',   label: 'Уголки',           qty: corners,    unit: 'шт', price: cornerPrice, cost: corners * cornerPrice }
+  ];
+  if (!isWide) {
+    items.push({ key: 'hinge', label: 'Петли', qty: hinges, unit: 'шт', price: PRICES.hinge, cost: hinges * PRICES.hinge });
+  }
+  items.push(
+    { key: 'screw',    label: 'Винты',            qty: screws,     unit: 'шт', price: PRICES.screw, cost: screws * PRICES.screw },
+    { key: 'seal',     label: 'Уплотнитель',      qty: sealMeters, unit: 'м',  price: PRICES.seal, cost: sealMeters * PRICES.seal },
+    { key: 'cut45',    label: 'Распил 45°',       qty: 1,          unit: 'фасад', price: PRICES.cut45, cost: PRICES.cut45 },
+    { key: 'hingeHole',label: isWide ? 'Отверстия (без петель)' : 'Отверстия под петли', qty: hingeHoles, unit: 'шт', price: PRICES.hingeHole, cost: hingeHoles * PRICES.hingeHole },
+    { key: 'asmHole',  label: 'Сборочные отверстия', qty: assemblyHoles, unit: 'шт', price: PRICES.assemblyHole, cost: assemblyHoles * PRICES.assemblyHole },
+    { key: 'assembly', label: 'Сборка фасада',    qty: 1,          unit: 'фасад', price: PRICES.assembly, cost: PRICES.assembly }
+  );
+
+  const perFacade = items.reduce((s, i) => s + i.cost, 0);
+  return {
+    perimeter, hinges, hingeHoles, screws, sealMeters, isWide,
+    items,
+    perFacade,
+    total: perFacade * qty,
+    qty
+  };
+}
+
+// ---------- рендер списка фасадов ----------
+function el(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstChild;
+}
+
+function buildFacadeCard(f) {
+  const node = el(`
+    <div class="facade" data-id="${f.id}">
+      <div class="facade-head">
+        <div>
+          <div class="facade-title" id="title-${f.id}"></div>
+          <div class="facade-meta" id="meta-${f.id}"></div>
+        </div>
+        <button class="btn-danger no-print" data-act="del">× Удалить</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Количество, шт</label>
+          <input data-k="qty" type="number" min="1" step="1" value="${f.qty}">
+        </div>
+        <div class="field">
+          <label>Тип профиля</label>
+          <select data-k="profileType">
+            ${PROFILE_TYPES.map(t => `<option value="${t.id}" ${t.id===f.profileType?'selected':''}>${t.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:8px">
+        <div class="field">
+          <label>Высота, мм</label>
+          <input data-k="height" type="number" min="0" step="1" value="${f.height}">
+        </div>
+        <div class="field">
+          <label>Ширина, мм</label>
+          <input data-k="width" type="number" min="0" step="1" value="${f.width}">
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:8px">
+        <div class="field">
+          <label>Цвет профиля</label>
+          <select data-k="profileColor">
+            ${PROFILE_COLORS.map(c => `<option value="${c.id}" ${c.id===f.profileColor?'selected':''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Цвет стекла</label>
+          <select data-k="glassColor">
+            ${GLASS_COLORS.map(c => `<option value="${c.id}" ${c.id===f.glassColor?'selected':''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div id="calc-${f.id}" style="margin-top:12px"></div>
+    </div>
+  `);
+
+  // bind inputs — НЕ перерисовываем всю карточку,
+  // только обновляем шапку, блок расчёта и общий итог.
+  node.querySelectorAll('[data-k]').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const key = e.target.dataset.k;
+      let v = e.target.value;
+      if (['width','height','qty'].includes(key)) v = +v || 0;
+      f[key] = v;
+      updateFacadeView(f);
+      renderGrand();
+    });
+  });
+
+  node.querySelector('[data-act="del"]').addEventListener('click', () => {
+    facades = facades.filter(x => x.id !== f.id);
+    renderFacades();
+    renderGrand();
+  });
+
+  return node;
+}
+
+function updateAllTitles() {
+  facades.forEach((f, idx) => {
+    const t = document.getElementById('title-' + f.id);
+    if (t) t.textContent = `Фасад №${idx+1}`;
+  });
+}
+
+function updateFacadeView(f) {
+  const calc = calcFacade(f);
+  const pc = PROFILE_COLORS.find(c => c.id === f.profileColor);
+  const gc = GLASS_COLORS.find(c => c.id === f.glassColor);
+
+  const meta = document.getElementById('meta-' + f.id);
+  if (meta) {
+    const hVal = f.height || '—';
+    const wVal = f.width  || '—';
+    meta.textContent = `${hVal}×${wVal} мм (В×Ш) · периметр ${fmtNum(calc.perimeter)} м · ${calc.isWide ? calc.hingeHoles + ' отв.' : calc.hinges + ' петель'}`;
+  }
+
+  const calcBox = document.getElementById('calc-' + f.id);
+  if (calcBox) {
+    calcBox.innerHTML = `
+      <div class="group-title">Расчёт на ${calc.qty} шт.</div>
+      ${calc.items.map(i => `
+        <div class="summary-line">
+          <span class="label">${i.label} · ${fmtNum(i.qty)} ${i.unit} × ${fmt(i.price).replace(' ₸','')} ₸</span>
+          <span class="val">${fmt(i.cost)}</span>
+        </div>
+      `).join('')}
+      <div class="summary-line" style="margin-top:6px">
+        <span class="label"><b>За 1 фасад</b></span>
+        <span class="val"><b>${fmt(calc.perFacade)}</b></span>
+      </div>
+      <div class="summary-line">
+        <span class="label"><b>Итого ×${calc.qty}</b> · <span class="swatch" style="background:${pc.hex}"></span>${pc.name} · <span class="swatch" style="background:${gc.hex}"></span>${gc.name}</span>
+        <span class="val"><b>${fmt(calc.total)}</b></span>
+      </div>
+    `;
+  }
+}
+
+function renderFacades() {
+  const list = document.getElementById('facadeList');
+  list.innerHTML = '';
+  if (facades.length === 0) {
+    list.appendChild(el(`<div class="empty">Пока нет ни одного фасада. Нажмите «Добавить фасад».</div>`));
+    return;
+  }
+  facades.forEach(f => list.appendChild(buildFacadeCard(f)));
+  updateAllTitles();
+  facades.forEach(updateFacadeView);
+}
+
+// ---------- общий итог ----------
+function renderGrand() {
+  const box = document.getElementById('grandBreakdown');
+  box.innerHTML = '';
+  if (facades.length === 0) {
+    box.innerHTML = `<div class="empty" style="margin-bottom:10px">Добавьте фасады, чтобы увидеть расчёт.</div>`;
+    document.getElementById('grandTotal').textContent = fmt(0);
+    return;
+  }
+
+  // агрегируем по материалам и услугам
+  const agg = {};
+  let grand = 0;
+  facades.forEach(f => {
+    const c = calcFacade(f);
+    grand += c.total;
+    c.items.forEach(i => {
+      const key = i.key + '|' + i.label + '|' + i.unit;
+      if (!agg[key]) agg[key] = { label: i.label, unit: i.unit, qty: 0, cost: 0 };
+      agg[key].qty  += i.qty * f.qty;
+      agg[key].cost += i.cost * f.qty;
+    });
+  });
+
+  const lines = Object.values(agg).map(a =>
+    `<div class="summary-line">
+       <span class="label">${a.label}, ${fmtNum(a.qty)} ${a.unit}</span>
+       <span class="val">${fmt(a.cost)}</span>
+     </div>`
+  ).join('');
+
+  box.innerHTML = `
+    <div class="group-title">Свод по позициям</div>
+    ${lines}
+  `;
+  document.getElementById('grandTotal').textContent = fmt(grand);
+}
+
+// ---------- утилиты ----------
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+// ---------- инициализация ----------
+document.getElementById('addFacade').addEventListener('click', () => {
+  const f = newFacade();
+  facades.push(f);
+  const list = document.getElementById('facadeList');
+  // убираем плейсхолдер «пусто», если был
+  const empty = list.querySelector('.empty');
+  if (empty) empty.remove();
+  // дорисовываем только новую карточку — старые не трогаем,
+  // чтобы скролл и фокус остались на месте
+  const card = buildFacadeCard(f);
+  list.appendChild(card);
+  updateAllTitles();
+  updateFacadeView(f);
+  renderGrand();
+  // плавно подкручиваем к новой карточке, фокус — на «Высота»
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const heightInput = card.querySelector('[data-k="height"]');
+  if (heightInput) heightInput.focus({ preventScroll: true });
+});
+
+document.getElementById('resetAll').addEventListener('click', () => {
+  if (facades.length === 0) return;
+  if (confirm('Очистить все фасады?')) {
+    facades = [];
+    renderFacades();
+    renderGrand();
+  }
+});
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+// дата по умолчанию
+document.getElementById('orderDate').valueAsDate = new Date();
+
+// первый фасад
+facades.push(newFacade());
+renderFacades();
+renderGrand();
+</script>
+</body>
+</html>
